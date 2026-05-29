@@ -26,7 +26,7 @@ function PlayerCard({
   isMe: boolean;
 }) {
   const color = PLAYER_COLORS[player.id];
-  const dead = !player.alive || (player.orbCount === 0 && player.id !== 0);
+  const dead = !player.alive || player.orbCount === 0;
 
   return (
     <div
