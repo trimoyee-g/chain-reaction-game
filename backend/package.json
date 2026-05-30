@@ -1,7 +1,7 @@
 {
-  "name": "chain-reaction-backend",
+  "name": "deton8-backend",
   "version": "1.0.0",
-  "description": "Chain Reaction multiplayer backend",
+  "description": "deton8 multiplayer backend",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
