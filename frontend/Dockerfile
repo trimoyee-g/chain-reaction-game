@@ -19,7 +19,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Next.js standalone output keeps only what's needed at runtime
-COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
