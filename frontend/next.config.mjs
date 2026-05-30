@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
+  output: "standalone",
   webpack: (config, { isServer }) => {
     if (!isServer) {
       // socket.io-client ships a Node.js WebSocket transport that imports `ws`.
