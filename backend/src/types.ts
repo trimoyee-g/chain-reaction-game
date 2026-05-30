@@ -35,4 +35,6 @@ export interface Room {
   hostSocketId: string;
   maxPlayers: number;
   state: GameState;
+  timedMode: boolean;
+  timePerTurn: number;
 }

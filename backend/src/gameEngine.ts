@@ -108,6 +108,12 @@ export function applyMove(state: GameState, r: number, c: number): GameState {
   };
 }
 
+export function skipTurn(state: GameState): GameState {
+  const newMoveCount = state.moveCount + 1;
+  const next = nextAlive(state.board, state.currentPlayer, state.players, newMoveCount);
+  return { ...state, currentPlayer: next, moveCount: newMoveCount };
+}
+
 export function initGame(players: PlayerConfig[], rows: number, cols: number): GameState {
   return {
     board: createBoard(rows, cols),

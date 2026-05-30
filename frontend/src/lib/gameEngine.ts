@@ -203,3 +203,11 @@ export function validMoves(board: Board, player: Player): [number, number][] {
   }
   return moves;
 }
+
+// ─── Skip turn (timer ran out) ────────────────────────────────────────────────
+
+export function skipTurn(state: GameState): GameState {
+  const newMoveCount = state.moveCount + 1;
+  const next = nextAlivePlayer(state.board, state.currentPlayer, state.players, newMoveCount);
+  return { ...state, currentPlayer: next, moveCount: newMoveCount };
+}

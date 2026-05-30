@@ -1,4 +1,4 @@
-import { applyMove, canPlaceOrb, initGame } from "./gameEngine";
+import { applyMove, canPlaceOrb, initGame, skipTurn } from "./gameEngine";
 import type { GameState, Player, PlayerConfig, Room } from "./types";
 
 const COLORS: Record<number, string> = {
@@ -24,7 +24,9 @@ export function createRoom(
   hostName: string,
   maxPlayers: number,
   rows: number,
-  cols: number
+  cols: number,
+  timedMode: boolean,
+  timePerTurn: number
 ): Room {
   let code = generateCode();
   while (rooms.has(code)) code = generateCode();
@@ -50,7 +52,7 @@ export function createRoom(
     cols,
   };
 
-  const room: Room = { code, hostSocketId, maxPlayers, state };
+  const room: Room = { code, hostSocketId, maxPlayers, state, timedMode, timePerTurn };
   rooms.set(code, room);
   socketRoom.set(hostSocketId, code);
   return room;
@@ -112,13 +114,35 @@ export function makeMove(
   return { success: true, state: room.state };
 }
 
-export function removePlayer(socketId: string): { code: string; room: Room } | null {
+export function skipTurnInRoom(
+  socketId: string
+): { success: true; state: GameState; room: Room } | { success: false; error: string } {
+  const code = socketRoom.get(socketId);
+  if (!code) return { success: false, error: "Not in a room." };
+
+  const room = rooms.get(code);
+  if (!room) return { success: false, error: "Room not found." };
+  if (room.state.status !== "playing") return { success: false, error: "Game not active." };
+
+  const player = room.state.players.find((p) => p.socketId === socketId);
+  if (!player) return { success: false, error: "Player not found." };
+  if (player.id !== room.state.currentPlayer) return { success: false, error: "Not your turn." };
+
+  room.state = skipTurn(room.state);
+  return { success: true, state: room.state, room };
+}
+
+export function removePlayer(
+  socketId: string
+): { code: string; room: Room; winner?: { id: number; name: string } } | null {
   const code = socketRoom.get(socketId);
   if (!code) return null;
   socketRoom.delete(socketId);
 
   const room = rooms.get(code);
   if (!room) return null;
+
+  const wasPlaying = room.state.status === "playing";
 
   // Remove player from list; if room is now empty, delete it
   room.state.players = room.state.players.filter((p) => p.socketId !== socketId);
@@ -130,6 +154,14 @@ export function removePlayer(socketId: string): { code: string; room: Room } | n
   // If the host disconnects, assign a new host
   if (room.hostSocketId === socketId && room.state.players.length > 0) {
     room.hostSocketId = room.state.players[0].socketId;
+  }
+
+  // If game was in progress and only one player remains, that player wins
+  if (wasPlaying && room.state.players.length === 1) {
+    const lastPlayer = room.state.players[0];
+    room.state.status = "finished";
+    room.state.winner = lastPlayer.id;
+    return { code, room, winner: { id: lastPlayer.id, name: lastPlayer.name } };
   }
 
   return { code, room };
