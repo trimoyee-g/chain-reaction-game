@@ -37,6 +37,49 @@ const DEFAULT_PLAYERS: PlayerSetup[] = [
   { name: "Player 4", isAI: false, difficulty: "medium" },
 ];
 
+function TimedModeToggle({
+  timedMode, timePerTurn, setTimedMode, setTimePerTurn,
+}: {
+  timedMode: boolean;
+  timePerTurn: number;
+  setTimedMode: (v: boolean) => void;
+  setTimePerTurn: (v: number) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3 p-3 border border-gray-800 rounded-xl">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-gray-400">⏱ Timed mode</span>
+        <button
+          onClick={() => setTimedMode(!timedMode)}
+          className={`relative w-10 h-5 rounded-full transition-colors ${timedMode ? "bg-blue-600" : "bg-gray-700"}`}
+        >
+          <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${timedMode ? "left-5" : "left-0.5"}`} />
+        </button>
+      </div>
+      {timedMode && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500 w-24">Seconds/turn</span>
+          <div className="flex gap-1.5">
+            {[10, 15, 20, 30].map((s) => (
+              <button
+                key={s}
+                onClick={() => setTimePerTurn(s)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                  timePerTurn === s
+                    ? "bg-blue-600 border-blue-500 text-white"
+                    : "border-gray-700 text-gray-400 hover:border-gray-500"
+                }`}
+              >
+                {s}s
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function HomePage() {
   const router = useRouter();
   const [mode, setMode] = useState<GameMode | null>(null);
@@ -44,6 +87,8 @@ export default function HomePage() {
   const [players, setPlayers] = useState<PlayerSetup[]>(DEFAULT_PLAYERS.map((p) => ({ ...p })));
   const [rows] = useState(6);
   const [cols] = useState(9);
+  const [timedMode, setTimedMode] = useState(false);
+  const [timePerTurn, setTimePerTurn] = useState(15);
 
   // Online-specific state
   const [onlineStep, setOnlineStep] = useState<"lobby" | "create" | "join">("lobby");
@@ -60,6 +105,8 @@ export default function HomePage() {
       mode,
       rows,
       cols,
+      timedMode,
+      timePerTurn,
       players: players.slice(0, playerCount).map((p, i) => ({
         id: (i + 1) as Player,
         name: p.name || `Player ${i + 1}`,
@@ -77,6 +124,8 @@ export default function HomePage() {
       mode: "ai",
       rows,
       cols,
+      timedMode,
+      timePerTurn,
       players: [
         {
           id: 1 as Player,
@@ -107,6 +156,8 @@ export default function HomePage() {
       playerCount,
       playerName: onlineName,
       action: "create",
+      timedMode,
+      timePerTurn,
     };
     sessionStorage.setItem("gameConfig", JSON.stringify(config));
     router.push("/game");
@@ -132,7 +183,7 @@ export default function HomePage() {
       {/* Title */}
       <div className="mb-10 text-center">
         <h1 className="text-5xl font-bold tracking-tight mb-2 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-          Chain Reaction
+          💥Deton8
         </h1>
         <p className="text-gray-500 text-sm">Place orbs. Reach critical mass. Explode.</p>
       </div>
@@ -208,6 +259,8 @@ export default function HomePage() {
             ))}
           </div>
 
+          <TimedModeToggle timedMode={timedMode} timePerTurn={timePerTurn} setTimedMode={setTimedMode} setTimePerTurn={setTimePerTurn} />
+
           <button
             onClick={startLocalGame}
             className="mt-2 w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-semibold transition-all"
@@ -256,6 +309,8 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+
+          <TimedModeToggle timedMode={timedMode} timePerTurn={timePerTurn} setTimedMode={setTimedMode} setTimePerTurn={setTimePerTurn} />
 
           <button
             onClick={startAIGame}
@@ -329,6 +384,7 @@ export default function HomePage() {
                   ))}
                 </div>
               </div>
+              <TimedModeToggle timedMode={timedMode} timePerTurn={timePerTurn} setTimedMode={setTimedMode} setTimePerTurn={setTimePerTurn} />
               <button
                 onClick={goCreateRoom}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-semibold transition-all"

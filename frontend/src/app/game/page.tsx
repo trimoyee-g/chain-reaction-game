@@ -30,7 +30,7 @@ function LobbyScreen({
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-8">
       <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-        Chain Reaction
+        Deton8
       </h1>
 
       {roomCode && (
@@ -98,8 +98,9 @@ export default function GamePage() {
     }
   }, [router]);
 
-  const { gameState, myPlayerId, explodedCells, roomCode, waitingFor, lobbyPlayers, isLobby, error, chatMessages, sendChatMessage, handleCellClick, resetGame } =
+  const { gameState, myPlayerId, explodedCells, roomCode, waitingFor, lobbyPlayers, isLobby, error, chatMessages, timeLeft, timePerTurn, canUndo, sendChatMessage, handleCellClick, undo, resetGame } =
     useGame(config);
+
 
   function goHome() {
     router.push("/");
@@ -149,21 +150,22 @@ export default function GamePage() {
   const turnColor = currentPlayerCfg ? COLORS[currentPlayerCfg.id] : "#fff";
 
   return (
-    <div className="min-h-screen flex items-start justify-center pt-8 pb-8 px-6 gap-8">
-      {/* Left column: sidebar + chat */}
-      <div className="flex flex-col gap-3">
-        <Sidebar
-          gameState={gameState}
-          myPlayerId={myPlayerId}
-          roomCode={roomCode}
-          onReset={resetGame}
-          onHome={goHome}
-        />
-        <Chat messages={chatMessages} onSend={sendChatMessage} />
-      </div>
+    <div className="min-h-screen h-screen flex items-start justify-center pt-8 pb-8 px-6 gap-8">
+      {/* Left column: sidebar */}
+      <Sidebar
+        gameState={gameState}
+        myPlayerId={myPlayerId}
+        roomCode={roomCode}
+        timeLeft={timeLeft}
+        timePerTurn={timePerTurn}
+        canUndo={canUndo}
+        onUndo={undo}
+        onReset={resetGame}
+        onHome={goHome}
+      />
 
+      {/* Centre column: turn indicator + board + legend */}
       <div className="flex flex-col gap-4">
-        {/* Turn indicator */}
         <div className="flex items-center gap-2 h-7">
           {gameState.status === "playing" && currentPlayerCfg && (
             <>
@@ -181,7 +183,6 @@ export default function GamePage() {
           )}
         </div>
 
-        {/* Board */}
         <Board
           gameState={gameState}
           myPlayerId={myPlayerId}
@@ -189,7 +190,6 @@ export default function GamePage() {
           onCellClick={handleCellClick}
         />
 
-        {/* Legend */}
         <div className="flex items-center gap-4 text-xs text-gray-600 mt-1">
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-3 rounded-full bg-yellow-400/50 ring-1 ring-yellow-400/50" />
@@ -201,6 +201,9 @@ export default function GamePage() {
           </span>
         </div>
       </div>
+
+      {/* Right column: chat */}
+      <Chat messages={chatMessages} onSend={sendChatMessage} myPlayerId={myPlayerId} />
 
       {/* Game over overlay */}
       {gameState.status === "finished" && gameState.winner !== null && (
